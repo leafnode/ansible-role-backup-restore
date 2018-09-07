@@ -1,0 +1,21 @@
+---
+- name: Redis | Upload backup database
+  copy:
+    src: "{{ restore_file }}"
+    dest: "{{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}/dump.rdb"
+    owner: redis
+    group: redis
+    mode: 0600
+
+- name: Redis | Stop Redis
+  service:
+    name: redis-server
+    state: stopped
+
+- name: Redis | Copy redis dump to destination folder
+  shell: "cp {{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}/dump.rdb {{ backup_redis_save_path }}/dump.rdb"
+
+- name: Redis | Start Redis
+  service:
+    name: redis-server
+    state: started

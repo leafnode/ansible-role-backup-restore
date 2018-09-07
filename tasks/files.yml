@@ -1,0 +1,10 @@
+---
+- name: Files | Upload files to tmp folder
+  copy:
+    src: "{{ restore_file }}/{{ item.dest_name }}"
+    dest: "{{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}/{{ item.dest_name }}"
+  with_items: "{{ backup_files_paths }}"
+
+- name: Files | Copy files to destination locations
+  shell: "cp -R {{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}/{{ item.dest_name }} {{ item.src }}"
+  with_items: "{{ backup_files_paths }}"

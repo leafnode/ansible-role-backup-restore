@@ -1,0 +1,34 @@
+---
+- name: Register timestamp variable
+  shell: date +%Y_%m_%d_%H_%M_%S
+  register: timestamp
+
+- name: Create backup folder
+  file:
+    state: directory
+    path: "{{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}"
+
+- name: Include PostgreSQL backup restore tasks
+  include: postgresql.yml
+  when: restore_postgresql|bool == True
+
+- name: Include Redis backup restore tasks
+  include: redis.yml
+  when: restore_redis|bool == true
+
+- name: Include files backup restore tasks
+  include: files.yml
+  when: restore_files|bool == true
+
+- name: Include MongoDB backup restore tasks
+  include: mongodb.yml
+  when: restore_mongodb|bool == true
+
+- name: Include ElasticSearch backup restore tasks
+  include: elasticsearch.yml
+  when: restore_elasticsearch|bool == true
+
+- name: Remove backup tmp folder
+  file:
+    path: "{{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}"
+    state: absent

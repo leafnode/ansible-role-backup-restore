@@ -1,0 +1,31 @@
+---
+- name: PostgreSQL | Upload backup dump
+  copy:
+    src: "{{ restore_file }}"
+    dest: "/var/lib/postgresql/backup.sql"
+    owner: postgres
+    group: postgres
+
+- name: PostgreSQL | Kill all connections
+  become: yes
+  become_user: postgres
+  shell: "psql --no-psqlrc --no-align --tuples-only --quiet --echo-queries --command=\"SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '{{ backup_postgresql_db }}' AND pid <> pg_backend_pid()\""
+
+- name: PostgreSQL | Drop previous database
+  become: yes
+  become_user: postgres
+  shell: "dropdb --if-exists {{ backup_postgresql_db }}"
+
+- name: PostgreSQL | Re-create the database
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    name: "{{ backup_postgresql_db }}"
+    owner: "{{ backup_postgresql_user }}"
+
+- name: PostgreSQL | Restore backup from the dump
+  become: yes
+  become_user: postgres
+  shell: "psql -U {{ backup_postgresql_user }} --no-psqlrc < /var/lib/postgresql/backup.sql"
+  environment:
+    PGPASSWORD: "{{ backup_postgresql_pass }}"

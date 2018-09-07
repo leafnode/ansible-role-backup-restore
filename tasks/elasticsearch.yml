@@ -1,0 +1,24 @@
+---
+- name: ElasticSearch | Upload and unarchive backup dump
+  unarchive:
+    src: "{{ restore_file }}"
+    dest: "{{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}"
+
+- name: ElasticSearch | Stop ElasticSearch
+  service:
+    name: elasticsearch
+    state: stopped
+
+- name: ElasticSearch | Remove old data
+  shell: "rm -r /var/lib/elasticsearch"
+
+- name: ElasticSearch | Copy elasticsearch dump to destination folder
+  shell: "cp -aR {{ backup_tmp_path }}/{{ backup_folder_prefix }}{{ timestamp.stdout }}/elasticsearch /var/lib"
+
+- name: ElasticSearch | Set permissions
+  shell: "chown -R elasticsearch.elasticsearch /var/lib/elasticsearch"
+
+- name: ElasticSearch | Start ElasticSearch
+  service:
+    name: elasticsearch
+    state: started
